@@ -1,0 +1,66 @@
+// //use to find the properties of the object that is being clicked
+//alert(JSON.stringify(info));
+
+
+
+
+
+//create reference variables for various dom elements
+const refPostContainer = 'div.rpBJOHq2PR60pnwJlUyP0'
+const refRegularImg = '._2_tDEnGMLxpM6uOa2kaDB3'
+
+
+//create the doStuff function
+function doStuff(imageNode){
+  link = imageNode.src
+
+  if (link.substr(0, 23) == 'https://preview.redd.it') {
+    linkNew = 'https://i.redd.it' + link.substr(23)
+
+    console.log('Here is the image link:')
+    console.log(link)
+    console.log(linkNew)
+  
+  } else if (link.substr(0, 32) == 'https://external-preview.redd.it') {
+    //look in class _13svhQIUZqD9PVzFcLwOKT then use .getAttribute("href")
+  }
+
+  
+}
+
+
+//list all initial image elements when page first loads (static list)
+// could use .getElementsByClassName() which is older, but auto-updates as the dom changes
+initialImages = document.querySelectorAll(refRegularImg)
+
+//run initial images through to doStuff function
+for (image of initialImages) {
+  doStuff(image)
+}
+
+
+
+//---------- MUTATION OBSERVER -------------
+
+
+
+//callback function to execute when mutations are observed
+const callback = function(mutations, observer) {
+
+  //iterate through mutations. Sometimes it is a list of 1, sometimes 2.
+  //  It seems each mutation only ever contains a single added node.
+  for (mutation of mutations) {
+    
+    //if the mutation node contains the image dom reference, send the image refererence to doStuff function
+    if (mutation.addedNodes[0].querySelector(refRegularImg)) {
+      doStuff(mutation.addedNodes[0].querySelector(refRegularImg))
+    }
+  }
+}
+
+
+//Set up the mutation observer. Look for new children within the refPostContainer dom element.
+new MutationObserver(callback).observe(
+  document.querySelector(refPostContainer),
+  {childList: true}
+)
