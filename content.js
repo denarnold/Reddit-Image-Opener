@@ -8,20 +8,16 @@ const buttonClass = '_3U_7i38RDPV5eBv7m4M-9J' //award button class, but could be
 
 const imageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
 const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
-//const shareButtonDom = '._3sUJGnemgtNczijwoT8PGg'
 
 
 
 
 //---------------------------------------------------------------
-//                       doStuff Function                      --
+//                       addButton Function                      --
 //---------------------------------------------------------------
 
-function doStuff(imageNode, postNode){
+function addButton(imageNode, postNode) {
   let rawLink = imageNode.src
-
-  console.log(imageNode)
-  console.log(postNode)
 
   //get original link for reddit images
   if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
@@ -35,8 +31,6 @@ function doStuff(imageNode, postNode){
   } else if (rawLink.substr(0, 17) == 'https://i.redd.it') {
     newLink = rawLink
   }
-
-  console.log(newLink)
   
   //add a link button to the post (it is just a link, not an actual button)
   //create button
@@ -53,61 +47,39 @@ function doStuff(imageNode, postNode){
   //add the button to the node
   newNode.append(btn)
 
-  console.log(newNode)
-
   //append the button to the button bar
   let buttonBar = postNode.querySelector(buttonBarDom)
   buttonBar.append(newNode)
-
-  console.log(buttonBar)
 }
 
 
 
 
 //---------------------------------------------------------------
-//                 Handle Initial Page Load Posts              --
+//                   Check Posts on Time Interval              --
 //---------------------------------------------------------------
 
-//create a list all initial posts when page first loads
-initialPosts = document.querySelectorAll(postContainerDom)[0].childNodes
+function checkPosts() {
+  //create a list of all posts
+  posts = document.querySelectorAll(postContainerDom)[0].childNodes
 
-//iterate through the list. If a post contains the image dom reference, send it to the doStuff function
-for (post of initialPosts) {
-  if (post.querySelector(imageDom)) {
-    console.log('sending initial load to function')
-    doStuff(post.querySelector(imageDom), post)
-  }
-}
+  //iterate through the list
+  for (post of posts) {
 
+    //check if post is an image post
+    if (post.querySelector(imageDom)) {
 
-
-
-//---------------------------------------------------------------
-//                      Handle Page Updates                    --
-//---------------------------------------------------------------
-
-//callback function to execute when mutations are observed
-const callback = function(mutations, observer) {
-
-  console.log(mutations)
-
-  //iterate through mutations. Sometimes it is a list of 1, sometimes 2.
-  //  It seems each mutation only ever contains a single added node.
-  for (mutation of mutations) {
-    
-    //if the mutation node contains the image dom reference, send it to doStuff function
-    if (mutation.addedNodes[0].querySelector(imageDom)) {
-      doStuff(
-        mutation.addedNodes[0].querySelector(imageDom),
-        mutation.addedNodes[0]
-      )
+      //if post doesn't already contain the Original Image button, add one
+      //  not exactly sure how formula works, copied from a webpage
+      if ((Array.from(post.querySelectorAll('div')).find(el => el.textContent === 'Original Image')) == undefined ) {
+        addButton(post.querySelector(imageDom), post)
+      }
     }
   }
 }
 
-//Set up the mutation observer. Look for new children within the postContainerDom dom element.
-new MutationObserver(callback).observe(
-  document.querySelector(postContainerDom),
-  {childList: true}
-)
+//run checkPosts immediately on page load
+checkPosts()
+
+//run checkposts every x seconds
+setInterval(checkPosts, 3000)
