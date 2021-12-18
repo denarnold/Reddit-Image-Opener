@@ -8,6 +8,7 @@ const buttonClass = '_3U_7i38RDPV5eBv7m4M-9J' //award button class, but could be
 
 const imageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
 const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
+const validUrlRegex = new RegExp('.*(\.reddit.com\/)(r\/([^\/]*)\/)?$')
 
 
 
@@ -60,19 +61,24 @@ function addButton(imageNode, postNode) {
 //---------------------------------------------------------------
 
 function checkPosts() {
-  //create a list of all posts
-  posts = document.querySelectorAll(postContainerDom)[0].childNodes
+  //validate that reddit is either on the main page or a community page
+  //  (this is just for effeciency)
+  if(validUrlRegex.test(window.location.href)) {
+  
+    //create a list of all posts
+    posts = document.querySelectorAll(postContainerDom)[0].childNodes
 
-  //iterate through the list
-  for (post of posts) {
+    //iterate through the list
+    for (post of posts) {
 
-    //check if post is an image post
-    if (post.querySelector(imageDom)) {
+      //check if post is an image post
+      if (post.querySelector(imageDom)) {
 
-      //if post doesn't already contain the Original Image button, add one
-      //  not exactly sure how formula works, copied from a webpage
-      if ((Array.from(post.querySelectorAll('div')).find(el => el.textContent === 'Original Image')) == undefined ) {
-        addButton(post.querySelector(imageDom), post)
+        //if post doesn't already contain the Original Image button, add one
+        //  not exactly sure how formula works, copied from a webpage
+        if ((Array.from(post.querySelectorAll('div')).find(el => el.textContent === 'Original Image')) == undefined ) {
+          addButton(post.querySelector(imageDom), post)
+        }
       }
     }
   }
@@ -82,4 +88,4 @@ function checkPosts() {
 checkPosts()
 
 //run checkposts every x seconds
-setInterval(checkPosts, 3000)
+setInterval(checkPosts, 2000)
