@@ -3,7 +3,10 @@
   "name": "Open Reddit Image",
   "version": "1.0",
   "description": "Open a reddit image at its full resolution",
-    
+  
+  "background": {
+    "scripts": ["background.js"]
+  },
   
   "content_scripts": [{
     "matches": ["https://*.reddit.com/*"],

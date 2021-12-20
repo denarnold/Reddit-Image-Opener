@@ -14,17 +14,17 @@ const validUrlRegex = new RegExp('.*(\.reddit.com\/)(r\/([^\/]*)\/)?$')
 
 
 //---------------------------------------------------------------
-//                       addButton Function                      --
+//                   findSourceLink Function                   --
 //---------------------------------------------------------------
 
-function addButton(imageNode, postNode) {
+function findSourceLink(imageNode, postNode) {
   let rawLink = imageNode.src
 
-  //get original link for reddit images
+  //get source link for reddit images
   if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
     newLink = 'https://i.redd.it' + rawLink.substr(23)
   
-  //get original link for external images
+  //get source link for external images
   } else if (rawLink.substr(0, 32) == 'https://external-preview.redd.it') {
     newLink = postNode.querySelector(externalLinkDom).getAttribute('href')
   
@@ -32,14 +32,23 @@ function addButton(imageNode, postNode) {
   } else if (rawLink.substr(0, 17) == 'https://i.redd.it') {
     newLink = rawLink
   }
-  
-  //add a link button to the post (it is just a link, not an actual button)
+
+  //return the output
+  return newLink
+}
+
+
+
+
+//---------------------------------------------------------------
+//                       addButton Function                    --
+//---------------------------------------------------------------
+
+function addButton(postNode) {
   //create button
   let btn = document.createElement('a')
-  btn.setAttribute('href', newLink)
-  btn.innerHTML = "Original Image"
-  btn.target = '_blank'
-  btn.rel = 'noreferrer noopener'
+  btn.innerHTML = "Open Image"
+  btn.setAttribute('href', '#!')
 
   //create a new node
   let newNode = document.createElement("div")
@@ -74,10 +83,10 @@ function checkPosts() {
       //check if post is an image post
       if (post.querySelector(imageDom)) {
 
-        //if post doesn't already contain the Original Image button, add one
+        //if post doesn't already contain the Source Image button, add one
         //  not exactly sure how formula works, copied from a webpage
-        if ((Array.from(post.querySelectorAll('div')).find(el => el.textContent === 'Original Image')) == undefined ) {
-          addButton(post.querySelector(imageDom), post)
+        if ((Array.from(post.querySelectorAll('div')).find(el => el.textContent === 'Open Image')) == undefined ) {
+          addButton(post)
         }
       }
     }
@@ -89,3 +98,24 @@ checkPosts()
 
 //run checkposts every x seconds
 setInterval(checkPosts, 2000)
+
+
+
+
+//---------------------------------------------------------------
+//                    Listen for Button Clicks                 --
+//---------------------------------------------------------------
+
+document.addEventListener("click", function(btn) {
+  
+  if (btn.target.innerHTML == "Open Image") {
+
+    //find the image node and image source for that post
+    let postNode = btn.path[4]
+    let imageNode = postNode.querySelector(imageDom)
+    let sourceLink = findSourceLink(imageNode, postNode)
+
+    //send a message to background.js as an array containing an identifying message and the link
+    chrome.runtime.sendMessage(["Open this image link", sourceLink])
+  }
+})
