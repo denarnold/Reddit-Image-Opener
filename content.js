@@ -3,6 +3,7 @@
 //---------------------------------------------------------------
 
 const postContainerDom = 'div.rpBJOHq2PR60pnwJlUyP0'
+const postDom = '._1poyrkZ7g36PawDueRza-J'
 const buttonBarDom = '._3-miAEojrCvx_4FQ8x3P-s'
 const buttonClass = '_3U_7i38RDPV5eBv7m4M-9J' //award button class, but could be any in the button bar
 
@@ -46,20 +47,11 @@ function findSourceLink(imageNode, postNode) {
 
 function addButton(postNode) {
   //create button
-  let btn = document.createElement('a')
-  btn.innerHTML = "Open Image"
-  btn.setAttribute('href', '#!')
-
-  //create a new node
-  let newNode = document.createElement("div")
-  //set one of the existing button class names to the new node so that the link is centered in the bar
-  newNode.className = buttonClass
-  //add the button to the node
-  newNode.append(btn)
+  let newNode = '<div><button class="kU8ebCMnbXfjCWfqn0WPb"><span>Open Image</span></button></div>'
 
   //append the button to the button bar
   let buttonBar = postNode.querySelector(buttonBarDom)
-  buttonBar.append(newNode)
+  buttonBar.innerHTML += newNode
 }
 
 
@@ -107,11 +99,11 @@ setInterval(checkPosts, 2000)
 //---------------------------------------------------------------
 
 document.addEventListener("click", function(btn) {
-  
-  if (btn.target.innerHTML == "Open Image") {
+
+  if (btn.target.innerText == "Open Image") {
 
     //find the image node and image source for that post
-    let postNode = btn.path[4]
+    let postNode = btn.target.closest(postDom)
     let imageNode = postNode.querySelector(imageDom)
     let sourceLink = findSourceLink(imageNode, postNode)
 
