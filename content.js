@@ -5,11 +5,26 @@
 const postContainerDom = 'div.rpBJOHq2PR60pnwJlUyP0'
 const postDom = '._1poyrkZ7g36PawDueRza-J'
 const buttonBarDom = '._3-miAEojrCvx_4FQ8x3P-s'
-const buttonClass = '_3U_7i38RDPV5eBv7m4M-9J' //award button class, but could be any in the button bar
+const buttonClass = 'kU8ebCMnbXfjCWfqn0WPb' //share button class, but could be any in the button bar
 
 const imageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
 const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
 const validUrlRegex = new RegExp('.*(\.reddit.com\/)(r\/([^\/]*)\/)?$')
+
+
+
+
+//---------------------------------------------------------------
+//                      Create Elements                        --
+//---------------------------------------------------------------
+
+// //create a new button class
+// var openImageStyle = document.createElement('style');
+// style.type = 'text/css';
+// style.innerHTML = '.cssClass { color: #F00; }';
+// document.getElementsByTagName('head')[0].appendChild(style);
+
+// document.getElementById('someElementId').className = 'cssClass';
 
 
 
@@ -47,11 +62,17 @@ function findSourceLink(imageNode, postNode) {
 
 function addButton(postNode) {
   //create button
-  let newNode = '<div><button class="kU8ebCMnbXfjCWfqn0WPb"><span>Open Image</span></button></div>'
+  btn = document.createElement('button')
+  btn.innerHTML = "Open Image"
+  btn.className = buttonClass
+
+  //append the button to a new node
+  newNode = document.createElement("div")
+  newNode.append(btn)
 
   //append the button to the button bar
   let buttonBar = postNode.querySelector(buttonBarDom)
-  buttonBar.innerHTML += newNode
+  buttonBar.append(newNode)
 }
 
 
