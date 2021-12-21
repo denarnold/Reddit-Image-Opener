@@ -5,7 +5,6 @@
 const postContainerDom = 'div.rpBJOHq2PR60pnwJlUyP0'
 const postDom = '._1poyrkZ7g36PawDueRza-J'
 const buttonBarDom = '._3-miAEojrCvx_4FQ8x3P-s'
-const buttonClass = 'kU8ebCMnbXfjCWfqn0WPb' //share button class, but could be any in the button bar
 
 const imageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
 const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
@@ -15,16 +14,19 @@ const validUrlRegex = new RegExp('.*(\.reddit.com\/)(r\/([^\/]*)\/)?$')
 
 
 //---------------------------------------------------------------
-//                      Create Elements                        --
+//                     Create Button Class                     --
 //---------------------------------------------------------------
 
-// //create a new button class
-// var openImageStyle = document.createElement('style');
-// style.type = 'text/css';
-// style.innerHTML = '.cssClass { color: #F00; }';
-// document.getElementsByTagName('head')[0].appendChild(style);
+//create a new button class called "openImageClass"
+//  Elements coppied from share button class 'kU8ebCMnbXfjCWfqn0WPb' but removed the :focus portion
+//  because the button would stay highlighted after being clicked.
+var style = document.createElement('style')
+style.type = 'text/css'
+style.innerHTML = '.openImageClass{border-radius:2px;padding:8px;display:-ms-flexbox;display:flex;' +
+                  '-ms-flex-align:center;align-items:center;text-transform:capitalize;height:100%}' +
+                  '.openImageClass:hover{background-color:var(--newRedditTheme-navIconFaded10);outline:none}'
 
-// document.getElementById('someElementId').className = 'cssClass';
+document.getElementsByTagName('head')[0].appendChild(style)
 
 
 
@@ -64,7 +66,7 @@ function addButton(postNode) {
   //create button
   btn = document.createElement('button')
   btn.innerHTML = "Open Image"
-  btn.className = buttonClass
+  btn.className = 'openImageClass'
 
   //append the button to a new node
   newNode = document.createElement("div")
