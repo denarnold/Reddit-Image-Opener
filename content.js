@@ -6,7 +6,8 @@ const postContainerDom = 'div.rpBJOHq2PR60pnwJlUyP0'
 const postDom = '._1poyrkZ7g36PawDueRza-J'
 const buttonBarDom = '._3-miAEojrCvx_4FQ8x3P-s'
 
-const imageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
+const singleImageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
+const multiImageDom = '._1dwExqTGJH2jnA-MYGkEL-'
 const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
 const validUrlRegex = new RegExp('.*(\.reddit.com\/)(r\/([^\/]*)\/)?$')
 
@@ -27,33 +28,6 @@ style.innerHTML = '.openImageClass{border-radius:2px;padding:8px;display:-ms-fle
                   '.openImageClass:hover{background-color:var(--newRedditTheme-navIconFaded10);outline:none}'
 
 document.getElementsByTagName('head')[0].appendChild(style)
-
-
-
-
-//---------------------------------------------------------------
-//                   findSourceLink Function                   --
-//---------------------------------------------------------------
-
-function findSourceLink(imageNode, postNode) {
-  let rawLink = imageNode.src
-
-  //get source link for reddit images
-  if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
-    newLink = 'https://i.redd.it' + rawLink.substr(23)
-  
-  //get source link for external images
-  } else if (rawLink.substr(0, 32) == 'https://external-preview.redd.it') {
-    newLink = postNode.querySelector(externalLinkDom).getAttribute('href')
-  
-  //push remaining good links through
-  } else if (rawLink.substr(0, 17) == 'https://i.redd.it') {
-    newLink = rawLink
-  }
-
-  //return the output
-  return newLink
-}
 
 
 
@@ -81,6 +55,44 @@ function addButton(postNode) {
 
 
 //---------------------------------------------------------------
+//                   findSourceLink Function                   --
+//---------------------------------------------------------------
+
+function findSourceLink(postNode) {
+  //identify the image node
+  if (postNode.querySelector(multiImageDom)) {
+    //for multi-image posts, find the container that is currently displayed (style="left: 0px;")
+    displayedImageContainer = postNode.querySelector('[style="left: 0px;"]')
+    //navigate to the image node within the container
+    imageNode = displayedImageContainer.querySelector(multiImageDom)
+  } else {
+    //handle single-image posts
+    imageNode = postNode.querySelector(singleImageDom)
+  }
+  
+  let rawLink = imageNode.src
+
+  //get source link for reddit images
+  if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
+    newLink = 'https://i.redd.it' + rawLink.substr(23)
+  
+  //get source link for external images
+  } else if (rawLink.substr(0, 32) == 'https://external-preview.redd.it') {
+    newLink = postNode.querySelector(externalLinkDom).getAttribute('href')
+  
+  //push remaining good links through
+  } else if (rawLink.substr(0, 17) == 'https://i.redd.it') {
+    newLink = rawLink
+  }
+
+  //return the output
+  return newLink
+}
+
+
+
+
+//---------------------------------------------------------------
 //                   Check Posts on Time Interval              --
 //---------------------------------------------------------------
 
@@ -96,7 +108,7 @@ function checkPosts() {
     for (post of posts) {
 
       //check if post is an image post
-      if (post.querySelector(imageDom)) {
+      if (post.querySelector([singleImageDom, multiImageDom].join())) {
 
         //if post doesn't already contain the Source Image button, add one
         //  not exactly sure how formula works, copied from a webpage
@@ -127,8 +139,7 @@ document.addEventListener("click", function(btn) {
 
     //find the image node and image source for that post
     let postNode = btn.target.closest(postDom)
-    let imageNode = postNode.querySelector(imageDom)
-    let sourceLink = findSourceLink(imageNode, postNode)
+    let sourceLink = findSourceLink(postNode)
 
     //send a message to background.js as an array containing an identifying message and the link
     chrome.runtime.sendMessage(["Open this image link", sourceLink])
