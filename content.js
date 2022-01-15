@@ -61,8 +61,12 @@ function addButton(postNode) {
 function findSourceLink(postNode) {
   //identify the image node
   if (postNode.querySelector(multiImageDom)) {
-    //for multi-image posts, find the container that is currently displayed (style="left: 0px;")
-    displayedImageContainer = postNode.querySelector('[style="left: 0px;"]')
+    //for multi-image posts, find the container that is currently displayed
+    //  will show left:0px when initially loaded, then left: 0px; after switching between images
+    displayedImageContainer = postNode.querySelector('[style="left:0px"], [style="left: 0px;"]')
+
+    console.log(postNode)
+    //console.log(displayedImageContainer)
     //navigate to the image node within the container
     imageNode = displayedImageContainer.querySelector(multiImageDom)
   } else {

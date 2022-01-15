@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Open Reddit Image",
+  "name": "Reddit Image Opener",
   "version": "1.0",
-  "description": "Open a reddit image at its full resolution",
+  "description": "Open the full-resolution source image of a reddit post",
 
   "permissions": [
     "storage"
