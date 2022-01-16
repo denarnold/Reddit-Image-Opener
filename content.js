@@ -101,7 +101,7 @@ function findSourceLink(postNode) {
 //---------------------------------------------------------------
 
 function checkPosts() {
-  //validate that reddit is either on the main page or a community page
+  //validate that reddit is either on the main page or a subreddit
   //  (this is just for effeciency)
   if(validUrlRegex.test(window.location.href)) {
   
