@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Reddit Image Opener",
   "version": "1.0",
-  "description": "Open the full-resolution source image of a reddit post",
+  "description": "Open images from reddit posts directly from post previews",
 
   "permissions": [
     "storage"
