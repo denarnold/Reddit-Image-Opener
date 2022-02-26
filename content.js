@@ -9,7 +9,6 @@ const buttonBarDom = '._3-miAEojrCvx_4FQ8x3P-s'
 const singleImageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
 const multiImageDom = '._1dwExqTGJH2jnA-MYGkEL-'
 const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
-const validUrlRegex = new RegExp('.*(\.reddit.com\/)(r\/([^\/]*)\/)((?!comments).)*$')
 
 
 
@@ -101,24 +100,19 @@ function findSourceLink(postNode) {
 //---------------------------------------------------------------
 
 function checkPosts() {
-  //validate that reddit is either on the main page or a subreddit
-  //  (this is just for effeciency)
-  if(validUrlRegex.test(window.location.href)) {
-  
-    //create a list of all posts
-    posts = document.querySelectorAll(postContainerDom)[0].childNodes
+  //create a list of all posts
+  posts = document.querySelectorAll(postContainerDom)[0].childNodes
 
-    //iterate through the list
-    for (post of posts) {
+  //iterate through the list
+  for (post of posts) {
 
-      //check if post is an image post
-      if (post.querySelector([singleImageDom, multiImageDom].join())) {
+    //check if post is an image post
+    if (post.querySelector([singleImageDom, multiImageDom].join())) {
 
-        //if post doesn't already contain the Source Image button, add one
-        //  not exactly sure how formula works, copied from a webpage
-        if ((Array.from(post.querySelectorAll('div')).find(el => el.textContent === 'Open Image')) == undefined ) {
-          addButton(post)
-        }
+      //if post doesn't already contain the Source Image button, add one
+      //  not exactly sure how formula works, copied from a webpage
+      if ((Array.from(post.querySelectorAll('div')).find(el => el.textContent === 'Open Image')) == undefined ) {
+        addButton(post)
       }
     }
   }
