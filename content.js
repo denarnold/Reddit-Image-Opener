@@ -9,7 +9,7 @@ const buttonBarDom = '._3-miAEojrCvx_4FQ8x3P-s'
 const singleImageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
 const multiImageDom = '._1dwExqTGJH2jnA-MYGkEL-'
 const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
-const validUrlRegex = new RegExp('.*(\.reddit.com\/)(r\/([^\/]*)\/)?$')
+const validUrlRegex = new RegExp('.*(\.reddit.com\/)(r\/([^\/]*)\/)((?!comments).)*$')
 
 
 
