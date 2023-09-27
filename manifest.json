@@ -1,11 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Reddit Image Opener",
-  "version": "1.3",
-  "description": "Open images from reddit posts directly from post previews",
+  "version": "1.6",
+  "description": "Open images on Reddit directly from post previews",
 
   "permissions": [
-    "storage"
+    "storage",
+    "declarativeNetRequest",
+    "tabs"
+  ],
+
+  "host_permissions": [
+    "*://i.redd.it/*",
+    "*://preview.redd.it/*",
+    "*://external-preview.redd.it/*"
   ],
   
   "background": {

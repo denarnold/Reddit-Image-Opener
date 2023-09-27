@@ -15,6 +15,7 @@
 
       .flex-container {
         display: flex;
+        align-items: center;
       }
 
       /* how to handle divs within a flex container */
@@ -41,8 +42,15 @@
     <h3>Settings:</h3>
 
     <label>
-      <input type="checkbox" id="openPreference">
+      <input type="checkbox" id="openTabs">
       Open tabs in background
+    </label>
+
+    <br>
+
+    <label>
+      <input type="checkbox" id="previewPage">
+      Disable Reddit's image view page
     </label>
 
     <script src="popup.js"></script>

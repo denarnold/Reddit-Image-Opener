@@ -77,7 +77,7 @@ function findSourceLink(postNode) {
 
   //get source link for reddit images
   if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
-    newLink = 'https://i.redd.it' + rawLink.substr(23)
+    newLink = 'https://i.redd.it' + rawLink.substr(23, rawLink.indexOf('?')-23)
   
   //get source link for external images
   } else if (rawLink.substr(0, 32) == 'https://external-preview.redd.it') {
