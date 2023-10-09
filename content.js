@@ -2,53 +2,207 @@
 //                     DOM Element References                  --
 //---------------------------------------------------------------
 
-const postContainerDom = 'div.rpBJOHq2PR60pnwJlUyP0'
-const postDom = '._1poyrkZ7g36PawDueRza-J'
-const buttonBarDom = '._3-miAEojrCvx_4FQ8x3P-s'
+// const postContainerNode = document.querySelector('report-flow-provider')
+// const postNode = document.querySelector('shreddit-post')
+// const buttonBarNode = postNode.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
 
-const singleImageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
-const multiImageDom = '._1dwExqTGJH2jnA-MYGkEL-'
-const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
-
-
-
-
-//---------------------------------------------------------------
-//                     Create Button Class                     --
-//---------------------------------------------------------------
-
-//create a new button class called "openImageClass"
-//  Elements coppied from share button class 'kU8ebCMnbXfjCWfqn0WPb' but removed the :focus portion
-//  because the button would stay highlighted after being clicked.
-var style = document.createElement('style')
-style.type = 'text/css'
-style.innerHTML = '.openImageClass{border-radius:2px;padding:8px;display:-ms-flexbox;display:flex;' +
-                  '-ms-flex-align:center;align-items:center;text-transform:capitalize;height:100%}' +
-                  '.openImageClass:hover{background-color:var(--newRedditTheme-navIconFaded10);outline:none}'
-
-document.getElementsByTagName('head')[0].appendChild(style)
+// const singleImageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
+// const multiImageDom = '._1dwExqTGJH2jnA-MYGkEL-'
+// const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
 
 
 
 
 //---------------------------------------------------------------
-//                       addButton Function                    --
+//                     Construct the Button                    --
 //---------------------------------------------------------------
 
-function addButton(postNode) {
-  //create button
-  btn = document.createElement('button')
-  btn.innerHTML = "Open Image"
-  btn.className = 'openImageClass'
+//define script for a new image open button (derrived from the share button)
+const buttonScript = `<button rpl=""
+    class="button border-md flex flex-row justify-center items-center mr-sm h-xl font-semibold relative text-12 button-secondary inline-flex items-center px-sm hover:text-secondary hover:bg-secondary-background-hover hover:border-secondary-background-hover"
+    style="height: var(--size-button-sm-h); font: var(--font-button-sm)"
+    type="button"
+    data-action="open-image"
+    aria-haspopup="true"
+    aria-expanded="false"
+    >
+    <span class="flex items-center">
+      <span>
+        Open Image
+      </span>
+    </span>
+  </button>`
 
-  //append the button to a new node
-  newNode = document.createElement("div")
-  newNode.append(btn)
+//use the dom parser to convert the buttonScript string into a node
+const parser = new DOMParser()
+const openImageButton = parser.parseFromString(buttonScript, 'text/html').body.firstChild
 
-  //append the button to the button bar
-  let buttonBar = postNode.querySelector(buttonBarDom)
-  buttonBar.append(newNode)
+
+
+
+//---------------------------------------------------------------
+//                  addButtonToPosts Function                  --
+//---------------------------------------------------------------
+
+//takes in a list of post nodes
+function addButtonToPosts(posts) {
+
+  // For each post, check if openImageButton exists in the button bar and add it if not
+  for (let post of posts) {
+    if (!post.shadowRoot.querySelector('button[data-action="open-image"]')) {
+      
+        // Identify the buttonBarNode
+        const buttonBarNode = post.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
+        
+        //add the button
+        buttonBarNode.appendChild(openImageButton.cloneNode(true))
+    }
+  }
 }
+
+
+
+
+//---------------------------------------------------------------
+//             Mutation Observer - New Post Batches            --
+//---------------------------------------------------------------
+
+//set up the mutation observer
+const postContainerNode = document.querySelector('report-flow-provider')
+const observer = new MutationObserver(mutations => {
+  for (let mutation of mutations) {
+    if (mutation.addedNodes.length) {
+      
+      // Loop through all added nodes
+      for (let node of mutation.addedNodes) {
+
+        // Check if the added node is a faceplate-batch
+        if (node.nodeName === 'FACEPLATE-BATCH') {
+
+          console.log("Added faceplate-batch node:", node)
+
+          // Filter its children to get the posts we're interested in
+          const addedPosts = Array.from(node.childNodes).filter(post => 
+            post.nodeName === 'SHREDDIT-POST' &&
+            (post.getAttribute('post-type') === 'image' || 
+              post.getAttribute('post-type') === 'gallery')
+          )
+
+          // If there are eligible posts, process them
+          if (addedPosts.length) {
+            setTimeout(() => {
+              console.log("Here are the addedPosts: ", addedPosts)
+              addButtonToPosts(addedPosts)
+            }, 1000)  // 1000ms delay
+          }
+        }
+      }
+    }
+  }
+})
+
+observer.observe(postContainerNode, { childList: true })
+
+
+
+
+//---------------------------------------------------------------
+//             Handling Initial Posts            --
+//---------------------------------------------------------------
+
+//building this out for subreddits. Will need to reinvestigate for reddit homepage
+function addButtons() {
+
+  // Get initial posts directly under report-flow-provider
+  const postContainerNode1 = document.querySelector('report-flow-provider')
+  const dom1Posts = Array.from(postContainerNode1.childNodes)
+      .filter(node =>
+        node.nodeName === 'SHREDDIT-POST' &&
+        (node.getAttribute('post-type') === 'image' ||
+          node.getAttribute('post-type') === 'gallery')
+      )
+
+  // Get additional posts under faceplate-batch.
+  // This is a child of report-flow-provider where new posts are added.
+  const postContainerNode2 = postContainerNode1.querySelector('faceplate-batch')
+  const dom2Posts = postContainerNode2 
+      ? Array.from(postContainerNode2.childNodes).filter(node => 
+          node.nodeName === 'SHREDDIT-POST' &&
+          (node.getAttribute('post-type') === 'image' || 
+            node.getAttribute('post-type') === 'gallery')
+      ): []
+
+  // Combine the two lists
+  const allPosts = [...dom1Posts, ...dom2Posts]
+
+  
+  //for every post, check if openImageButton exists in the button bar and add it if not
+  for (let post of allPosts) {
+    if (!post.shadowRoot.querySelector('button[data-action="open-image"]')) {
+
+      //identify the buttonBarNode
+      buttonBarNode = post.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
+
+      //add the openImageButton
+      buttonBarNode.appendChild(openImageButton.cloneNode(true))
+    }
+  }
+}
+
+
+
+
+//run checkPosts immediately on page load
+checkPosts()
+
+//run checkposts every x seconds
+setInterval(checkPosts, 2000)
+
+
+
+
+//---------------------------------------------------------------
+//                    Listen for Button Clicks                 --
+//---------------------------------------------------------------
+
+// document.addEventListener("click", function(btn) {
+
+//   if (btn.target.innerText == "Open Image") {
+
+//     //find the image node and image source for that post
+//     let postNode = btn.target.closest(postDom)
+//     let sourceLink = findSourceLink(postNode)
+
+//     //send a message to background.js as an array containing an identifying message and the link
+//     chrome.runtime.sendMessage(["Open this image link", sourceLink])
+//   }
+// })
+
+
+
+document.addEventListener('click', function(event) {
+  // Get the full path of the event, including elements inside shadow DOMs
+  const path = event.composedPath()
+
+  // Search within the first 3 elements in the path for a button element with the 'open-image' action
+  for (let i = 0; i < Math.min(3, path.length); i++) {
+      const element = path[i]
+      if (element.nodeName === 'BUTTON' && element.dataset && element.dataset.action === 'open-image') {
+
+          console.log('Open Image button clicked!')
+
+          //identify the post dom element in the path (3 elements past the button element)
+          const postElement = path[i+3]
+
+          console.log(postElement)
+
+          // //execute the findSourceLink function
+          // findSourceLink(postElement)
+
+          break // Exit the loop once we've found the element
+      }
+  }
+})
 
 
 
@@ -61,8 +215,8 @@ function findSourceLink(postNode) {
   //identify the image node
   if (postNode.querySelector(multiImageDom)) {
     //for multi-image posts, find the container that is currently displayed
-    //  will show left:0px when initially loaded, then left: 0px; after switching between images
-    displayedImageContainer = postNode.querySelector('[style="left:0px"], [style="left: 0px;"]')
+    //  will show left:0px when initially loaded, then left: 0px after switching between images
+    displayedImageContainer = postNode.querySelector('[style="left:0px"], [style="left: 0px"]')
 
     console.log(postNode)
     //console.log(displayedImageContainer)
@@ -91,55 +245,3 @@ function findSourceLink(postNode) {
   //return the output
   return newLink
 }
-
-
-
-
-//---------------------------------------------------------------
-//                   Check Posts on Time Interval              --
-//---------------------------------------------------------------
-
-function checkPosts() {
-  //create a list of all posts
-  posts = document.querySelectorAll(postContainerDom)[0].childNodes
-
-  //iterate through the list
-  for (post of posts) {
-
-    //check if post is an image post
-    if (post.querySelector([singleImageDom, multiImageDom].join())) {
-
-      //if post doesn't already contain the Source Image button, add one
-      //  not exactly sure how formula works, copied from a webpage
-      if ((Array.from(post.querySelectorAll('div')).find(el => el.textContent === 'Open Image')) == undefined ) {
-        addButton(post)
-      }
-    }
-  }
-}
-
-//run checkPosts immediately on page load
-checkPosts()
-
-//run checkposts every x seconds
-setInterval(checkPosts, 2000)
-
-
-
-
-//---------------------------------------------------------------
-//                    Listen for Button Clicks                 --
-//---------------------------------------------------------------
-
-document.addEventListener("click", function(btn) {
-
-  if (btn.target.innerText == "Open Image") {
-
-    //find the image node and image source for that post
-    let postNode = btn.target.closest(postDom)
-    let sourceLink = findSourceLink(postNode)
-
-    //send a message to background.js as an array containing an identifying message and the link
-    chrome.runtime.sendMessage(["Open this image link", sourceLink])
-  }
-})
