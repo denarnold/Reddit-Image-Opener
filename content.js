@@ -29,8 +29,6 @@ const openImageButton = parser.parseFromString(buttonScript, 'text/html').body.f
 //                   Check Posts on Time Interval              --
 //---------------------------------------------------------------
 
-const postContainerNode = document.querySelector('report-flow-provider')
-
 // Takes a node list and filters to only contain image posts
 function filterImagePosts(container) {
     return Array.from(container.children).filter(node =>
@@ -41,6 +39,12 @@ function filterImagePosts(container) {
 }
 
 function addButtonToPosts() {
+
+    ////////////////////////  Assemble List of All Posts  ////////////////////////
+    
+    // Define the main post container node (contains initial posts and batches of new posts)
+    const postContainerNode = document.querySelector('report-flow-provider')
+
     // Collect posts directly under report-flow-provider
     let allPosts = filterImagePosts(postContainerNode)
 
@@ -49,6 +53,15 @@ function addButtonToPosts() {
     for (let batch of faceplateBatches) {
         allPosts = allPosts.concat(filterImagePosts(batch))
     }
+
+    // Collect posts under any shreddit-feed children of report-flow-provider
+    const shredditFeeds = postContainerNode.querySelectorAll('shreddit-feed')
+    for (let feed of shredditFeeds) {
+        allPosts = allPosts.concat(filterImagePosts(feed))
+    }
+
+
+    ////////////////////////  Add Buttons  ////////////////////////
 
     // Check each image post for openImageButton and add if not present
     for (let post of allPosts) {
@@ -64,7 +77,7 @@ function addButtonToPosts() {
 }
 
 // Run the assemblePostList function every 2 seconds
-setInterval(addButtonToPosts, 2000);
+setInterval(addButtonToPosts, 2000)
 
 
 
@@ -72,21 +85,6 @@ setInterval(addButtonToPosts, 2000);
 //---------------------------------------------------------------
 //                    Listen for Button Clicks                 --
 //---------------------------------------------------------------
-
-// document.addEventListener("click", function(btn) {
-
-//   if (btn.target.innerText == "Open Image") {
-
-//     //find the image node and image source for that post
-//     let postNode = btn.target.closest(postDom)
-//     let sourceLink = findSourceLink(postNode)
-
-//     //send a message to background.js as an array containing an identifying message and the link
-//     chrome.runtime.sendMessage(["Open this image link", sourceLink])
-//   }
-// })
-
-
 
 document.addEventListener('click', function(event) {
   // Get the full path of the event, including elements inside shadow DOMs
@@ -97,17 +95,17 @@ document.addEventListener('click', function(event) {
       const element = path[i]
       if (element.nodeName === 'BUTTON' && element.dataset && element.dataset.action === 'open-image') {
 
-          console.log('Open Image button clicked!')
+        // Identify the post dom element in the path (3 elements past the button element)
+        const postNode = postElement = path[i+3]
 
-          // Identify the post dom element in the path (3 elements past the button element)
-          const postElement = path[i+3]
+        // Identify the image source link for the post
+        const sourceLink = findSourceLink(postNode)
 
-          console.log(postElement)
+        //send a message to background.js as an array containing an identifying message and the link
+        chrome.runtime.sendMessage(["Open this image link", sourceLink])
 
-          // //execute the findSourceLink function
-          // findSourceLink(postElement)
-
-          break // Exit the loop once we've found the element
+        // Exit the loop once we've found the element
+        break
       }
   }
 })
