@@ -25,8 +25,8 @@ chrome.runtime.onMessage.addListener(function(message) {
   
   if (message[0] == "Open this image link") {
 
-    chrome.storage.local.get(['openTabs'], function(result) {  //retrieve preference from local storage
-      //open a new chrome tab
+    chrome.storage.local.get(['openTabs'], function(result) {  // Retrieve preference from local storage
+      // Open a new chrome tab
       chrome.tabs.create({
         url:message[1],
         active: !result.openTabs
@@ -42,11 +42,11 @@ chrome.runtime.onMessage.addListener(function(message) {
 //                Establish Header Rules on Install            --
 //---------------------------------------------------------------
 
-//set up headerRules if the headerRules variable is not yet saved in chrome.storage
+// Set up headerRules if the headerRules variable is not yet saved in chrome.storage
 chrome.storage.local.get('headerRules', function(result) {
   if(result.headerRules == undefined) {
       
-    //create list of rules
+    // Create list of rules
     const headerRules = [
       {
         "id" : 1,
@@ -95,20 +95,20 @@ chrome.storage.local.get('headerRules', function(result) {
       }
     ]
 
-    //disable any existing rules (to prevent errors during debugging)
+    // Disable any existing rules (to prevent errors during debugging)
     chrome.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: [1, 2, 3]
     });
 
-    //enable the rules
+    // Enable the rules
     chrome.declarativeNetRequest.updateDynamicRules({
       addRules: headerRules
     });
 
-    //set the checkbox
+    // Set the checkbox
     chrome.storage.local.set({'previewPage': [true]});
 
-    //save list of rules to chrome.storage to reference when checkbox is toggled. Saved as key:value pair.
+    // Save list of rules to chrome.storage to reference when checkbox is toggled. Saved as key:value pair.
     chrome.storage.local.set({headerRules: headerRules});
   }
 });

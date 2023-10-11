@@ -1,18 +1,8 @@
 //---------------------------------------------------------------
-//                     DOM Element References                  --
-//---------------------------------------------------------------
-
-const postContainerNode = document.querySelector('report-flow-provider')
-const homepagePostContainerNode = postContainerNode.querySelector(':scope > shreddit-feed')
-
-
-
-
-//---------------------------------------------------------------
 //                     Construct the Button                    --
 //---------------------------------------------------------------
 
-//define script for a new image open button (derrived from the share button)
+// Define script for a new image open button (derrived from the share button)
 const buttonScript = `<button rpl=""
     class="button border-md flex flex-row justify-center items-center mr-sm h-xl font-semibold relative text-12 button-secondary inline-flex items-center px-sm hover:text-secondary hover:bg-secondary-background-hover hover:border-secondary-background-hover"
     style="height: var(--size-button-sm-h); font: var(--font-button-sm)"
@@ -28,7 +18,7 @@ const buttonScript = `<button rpl=""
     </span>
   </button>`
 
-//use the dom parser to convert the buttonScript string into a node
+// Use the dom parser to convert the buttonScript string into a node
 const parser = new DOMParser()
 const openImageButton = parser.parseFromString(buttonScript, 'text/html').body.firstChild
 
@@ -36,100 +26,45 @@ const openImageButton = parser.parseFromString(buttonScript, 'text/html').body.f
 
 
 //---------------------------------------------------------------
-//                  addButtonToPosts Function                  --
+//                   Check Posts on Time Interval              --
 //---------------------------------------------------------------
 
-//takes a node list at the post level
-function addButtonToPosts(nodes) {
+const postContainerNode = document.querySelector('report-flow-provider')
 
-  //filter node list to only contain image posts
-  posts = Array.from(nodes).filter(node =>
-    node.nodeName === 'SHREDDIT-POST' &&
-    (node.getAttribute('post-type') === 'image' || 
-      node.getAttribute('post-type') === 'gallery')
-  )
+// Takes a node list and filters to only contain image posts
+function filterImagePosts(container) {
+    return Array.from(container.children).filter(node =>
+        node.nodeName === 'SHREDDIT-POST' &&
+        (node.getAttribute('post-type') === 'image' || 
+         node.getAttribute('post-type') === 'gallery')
+    )
+}
 
-  // if there are image posts, check each post for openImageButton and add if not present
-  if (posts.length) {
-    for (let post of posts) {
+function addButtonToPosts() {
+    // Collect posts directly under report-flow-provider
+    let allPosts = filterImagePosts(postContainerNode)
+
+    // Collect posts under any faceplate-batch children of report-flow-provider
+    const faceplateBatches = postContainerNode.querySelectorAll('faceplate-batch')
+    for (let batch of faceplateBatches) {
+        allPosts = allPosts.concat(filterImagePosts(batch))
+    }
+
+    // Check each image post for openImageButton and add if not present
+    for (let post of allPosts) {
       if (!post.shadowRoot.querySelector('button[data-action="open-image"]')) {
         
-        // Identify the buttonBarNode
-        const buttonBarNode = post.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
+        // Identify the buttonBarNode of the post
+        let buttonBarNode = post.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
         
-        //add the button
+        // Add the button
         buttonBarNode.appendChild(openImageButton.cloneNode(true))
       }
     }
-  }
 }
 
-
-
-
-//---------------------------------------------------------------
-//                        Process Posts                        --
-//---------------------------------------------------------------
-
-function processPosts() {
-
-  //process posts on reddit homepage
-  if (homepagePostContainerNode) {
-    
-    //process initial posts located directly under report-flow-provider
-    //  (tried using DOMContentLoaded event listener, but it wouldn't fire because the dom already loaded
-    //  before this script was run. Try *** code at bottom of document if it acts up)
-    addButtonToPosts(homepagePostContainerNode.childNodes)
-
-    //set up the mutation observer to catch new post batches
-    const observer = new MutationObserver(mutations => {
-      for (let mutation of mutations) {
-        if (mutation.addedNodes.length) {  
-          //delay 1000ms before executing, otherwise nodes may return null
-          setTimeout(() => {addButtonToPosts(mutation.addedNodes)}, 1000)
-        }
-      }
-    })
-    observer.observe(homepagePostContainerNode, { childList: true })
-
-
-  //process posts on other pages (subreddits, user profiles)
-  } else {
-
-    //process initial posts located directly under report-flow-provider
-    addButtonToPosts(postContainerNode.childNodes)
-
-    //set up the mutation observer to catch new post batches
-    const observer = new MutationObserver(mutations => {
-      for (let mutation of mutations) {
-        if (mutation.addedNodes.length) {
-          
-          // Loop through all added nodes
-          for (let node of mutation.addedNodes) {
-
-            //process if the node is faceplate-batch
-            if (node.nodeName === 'FACEPLATE-BATCH') {
-                //delay 1000ms before executing, otherwise nodes may return null
-                setTimeout(() => {addButtonToPosts(node.childNodes)}, 1000)
-            }
-          }
-        }
-      }
-    })
-    observer.observe(postContainerNode, { childList: true })
-  }
-}
-
-//run the processPosts function when the page loads
-processPosts()
-
-//run the processPosts function when navigated to a different page
-document.addEventListener('NavigateEvent', function(event) {
-  // Check if the navigationType is 'traverse'
-  if (event.detail && event.detail.navigationType === 'push') {
-    processPosts()
-  }
-})
+// Run the assemblePostList function every 2 seconds
+setInterval(addButtonToPosts, 2000);
 
 
 
@@ -164,7 +99,7 @@ document.addEventListener('click', function(event) {
 
           console.log('Open Image button clicked!')
 
-          //identify the post dom element in the path (3 elements past the button element)
+          // Identify the post dom element in the path (3 elements past the button element)
           const postElement = path[i+3]
 
           console.log(postElement)
@@ -217,22 +152,4 @@ document.addEventListener('click', function(event) {
 
 //   //return the output
 //   return newLink
-// }
-
-
-
-
-//---------------------------------------------------------------
-//                   unused code                   --
-//---------------------------------------------------------------
-
-//***
-// if (document.readyState === 'loading') {  // If document is still loading, add the event listener
-//   document.addEventListener('DOMContentLoaded', function() {
-//       console.log("Inside DOMContentLoaded listener");
-//       setTimeout(() => {addButtonToPosts(homepagePostContainerNode.childNodes)}, 1000);
-//   });
-// } else {  // Otherwise, directly execute your code
-//   console.log("Directly invoking the code as the document is already parsed");
-//   setTimeout(() => {addButtonToPosts(homepagePostContainerNode.childNodes)}, 1000);
 // }

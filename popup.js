@@ -36,23 +36,23 @@ document.getElementById('openTabs').addEventListener('click', function() {
 // When the previewPage checkbox is clicked...
 document.getElementById('previewPage').addEventListener('click', function() {
 
-  //save checkbox state to chrome.storage
+  // Save checkbox state to chrome.storage
   save_options('previewPage');
 
-  //enable/disable header rules
+  // Enable/disable header rules
   if (document.getElementById('previewPage').checked) {  //checkbox is checked; enable the rules
 
-    //retrieve rules from chrome.storage
+    // Retrieve rules from chrome.storage
     chrome.storage.local.get('headerRules', function(result) {
       const headerRules = result.headerRules;
 
-      //enable the rules
+      // Enable the rules
       chrome.declarativeNetRequest.updateDynamicRules({
         addRules: headerRules
       });
     });
 
-  } else {  //checkbox is unchecked; disable the rules
+  } else {  // Checkbox is unchecked; disable the rules
     
     chrome.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: [1, 2, 3]
