@@ -2,13 +2,8 @@
 //                     DOM Element References                  --
 //---------------------------------------------------------------
 
-// const postContainerNode = document.querySelector('report-flow-provider')
-// const postNode = document.querySelector('shreddit-post')
-// const buttonBarNode = postNode.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
-
-// const singleImageDom = '._2_tDEnGMLxpM6uOa2kaDB3'
-// const multiImageDom = '._1dwExqTGJH2jnA-MYGkEL-'
-// const externalLinkDom = '._13svhQIUZqD9PVzFcLwOKT'
+const postContainerNode = document.querySelector('report-flow-provider')
+const homepagePostContainerNode = postContainerNode.querySelector(':scope > shreddit-feed')
 
 
 
@@ -44,119 +39,97 @@ const openImageButton = parser.parseFromString(buttonScript, 'text/html').body.f
 //                  addButtonToPosts Function                  --
 //---------------------------------------------------------------
 
-//takes in a list of post nodes
-function addButtonToPosts(posts) {
+//takes a node list at the post level
+function addButtonToPosts(nodes) {
 
-  // For each post, check if openImageButton exists in the button bar and add it if not
-  for (let post of posts) {
-    if (!post.shadowRoot.querySelector('button[data-action="open-image"]')) {
-      
+  //filter node list to only contain image posts
+  posts = Array.from(nodes).filter(node =>
+    node.nodeName === 'SHREDDIT-POST' &&
+    (node.getAttribute('post-type') === 'image' || 
+      node.getAttribute('post-type') === 'gallery')
+  )
+
+  // if there are image posts, check each post for openImageButton and add if not present
+  if (posts.length) {
+    for (let post of posts) {
+      if (!post.shadowRoot.querySelector('button[data-action="open-image"]')) {
+        
         // Identify the buttonBarNode
         const buttonBarNode = post.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
         
         //add the button
         buttonBarNode.appendChild(openImageButton.cloneNode(true))
-    }
-  }
-}
-
-
-
-
-//---------------------------------------------------------------
-//             Mutation Observer - New Post Batches            --
-//---------------------------------------------------------------
-
-//set up the mutation observer
-const postContainerNode = document.querySelector('report-flow-provider')
-const observer = new MutationObserver(mutations => {
-  for (let mutation of mutations) {
-    if (mutation.addedNodes.length) {
-      
-      // Loop through all added nodes
-      for (let node of mutation.addedNodes) {
-
-        // Check if the added node is a faceplate-batch
-        if (node.nodeName === 'FACEPLATE-BATCH') {
-
-          console.log("Added faceplate-batch node:", node)
-
-          // Filter its children to get the posts we're interested in
-          const addedPosts = Array.from(node.childNodes).filter(post => 
-            post.nodeName === 'SHREDDIT-POST' &&
-            (post.getAttribute('post-type') === 'image' || 
-              post.getAttribute('post-type') === 'gallery')
-          )
-
-          // If there are eligible posts, process them
-          if (addedPosts.length) {
-            setTimeout(() => {
-              console.log("Here are the addedPosts: ", addedPosts)
-              addButtonToPosts(addedPosts)
-            }, 1000)  // 1000ms delay
-          }
-        }
       }
     }
   }
-})
-
-observer.observe(postContainerNode, { childList: true })
-
-
-
-
-//---------------------------------------------------------------
-//             Handling Initial Posts            --
-//---------------------------------------------------------------
-
-//building this out for subreddits. Will need to reinvestigate for reddit homepage
-function addButtons() {
-
-  // Get initial posts directly under report-flow-provider
-  const postContainerNode1 = document.querySelector('report-flow-provider')
-  const dom1Posts = Array.from(postContainerNode1.childNodes)
-      .filter(node =>
-        node.nodeName === 'SHREDDIT-POST' &&
-        (node.getAttribute('post-type') === 'image' ||
-          node.getAttribute('post-type') === 'gallery')
-      )
-
-  // Get additional posts under faceplate-batch.
-  // This is a child of report-flow-provider where new posts are added.
-  const postContainerNode2 = postContainerNode1.querySelector('faceplate-batch')
-  const dom2Posts = postContainerNode2 
-      ? Array.from(postContainerNode2.childNodes).filter(node => 
-          node.nodeName === 'SHREDDIT-POST' &&
-          (node.getAttribute('post-type') === 'image' || 
-            node.getAttribute('post-type') === 'gallery')
-      ): []
-
-  // Combine the two lists
-  const allPosts = [...dom1Posts, ...dom2Posts]
-
-  
-  //for every post, check if openImageButton exists in the button bar and add it if not
-  for (let post of allPosts) {
-    if (!post.shadowRoot.querySelector('button[data-action="open-image"]')) {
-
-      //identify the buttonBarNode
-      buttonBarNode = post.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
-
-      //add the openImageButton
-      buttonBarNode.appendChild(openImageButton.cloneNode(true))
-    }
-  }
 }
 
 
 
 
-//run checkPosts immediately on page load
-checkPosts()
+//---------------------------------------------------------------
+//                        Process Posts                        --
+//---------------------------------------------------------------
 
-//run checkposts every x seconds
-setInterval(checkPosts, 2000)
+function processPosts() {
+
+  //process posts on reddit homepage
+  if (homepagePostContainerNode) {
+    
+    //process initial posts located directly under report-flow-provider
+    //  (tried using DOMContentLoaded event listener, but it wouldn't fire because the dom already loaded
+    //  before this script was run. Try *** code at bottom of document if it acts up)
+    addButtonToPosts(homepagePostContainerNode.childNodes)
+
+    //set up the mutation observer to catch new post batches
+    const observer = new MutationObserver(mutations => {
+      for (let mutation of mutations) {
+        if (mutation.addedNodes.length) {  
+          //delay 1000ms before executing, otherwise nodes may return null
+          setTimeout(() => {addButtonToPosts(mutation.addedNodes)}, 1000)
+        }
+      }
+    })
+    observer.observe(homepagePostContainerNode, { childList: true })
+
+
+  //process posts on other pages (subreddits, user profiles)
+  } else {
+
+    //process initial posts located directly under report-flow-provider
+    addButtonToPosts(postContainerNode.childNodes)
+
+    //set up the mutation observer to catch new post batches
+    const observer = new MutationObserver(mutations => {
+      for (let mutation of mutations) {
+        if (mutation.addedNodes.length) {
+          
+          // Loop through all added nodes
+          for (let node of mutation.addedNodes) {
+
+            //process if the node is faceplate-batch
+            if (node.nodeName === 'FACEPLATE-BATCH') {
+                //delay 1000ms before executing, otherwise nodes may return null
+                setTimeout(() => {addButtonToPosts(node.childNodes)}, 1000)
+            }
+          }
+        }
+      }
+    })
+    observer.observe(postContainerNode, { childList: true })
+  }
+}
+
+//run the processPosts function when the page loads
+processPosts()
+
+//run the processPosts function when navigated to a different page
+document.addEventListener('NavigateEvent', function(event) {
+  // Check if the navigationType is 'traverse'
+  if (event.detail && event.detail.navigationType === 'push') {
+    processPosts()
+  }
+})
 
 
 
@@ -211,37 +184,55 @@ document.addEventListener('click', function(event) {
 //                   findSourceLink Function                   --
 //---------------------------------------------------------------
 
-function findSourceLink(postNode) {
-  //identify the image node
-  if (postNode.querySelector(multiImageDom)) {
-    //for multi-image posts, find the container that is currently displayed
-    //  will show left:0px when initially loaded, then left: 0px after switching between images
-    displayedImageContainer = postNode.querySelector('[style="left:0px"], [style="left: 0px"]')
+// function findSourceLink(postNode) {
+//   //identify the image node
+//   if (postNode.querySelector(multiImageDom)) {
+//     //for multi-image posts, find the container that is currently displayed
+//     //  will show left:0px when initially loaded, then left: 0px after switching between images
+//     displayedImageContainer = postNode.querySelector('[style="left:0px"], [style="left: 0px"]')
 
-    console.log(postNode)
-    //console.log(displayedImageContainer)
-    //navigate to the image node within the container
-    imageNode = displayedImageContainer.querySelector(multiImageDom)
-  } else {
-    //handle single-image posts
-    imageNode = postNode.querySelector(singleImageDom)
-  }
+//     console.log(postNode)
+//     //console.log(displayedImageContainer)
+//     //navigate to the image node within the container
+//     imageNode = displayedImageContainer.querySelector(multiImageDom)
+//   } else {
+//     //handle single-image posts
+//     imageNode = postNode.querySelector(singleImageDom)
+//   }
   
-  let rawLink = imageNode.src
+//   let rawLink = imageNode.src
 
-  //get source link for reddit images
-  if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
-    newLink = 'https://i.redd.it' + rawLink.substr(23, rawLink.indexOf('?')-23)
+//   //get source link for reddit images
+//   if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
+//     newLink = 'https://i.redd.it' + rawLink.substr(23, rawLink.indexOf('?')-23)
   
-  //get source link for external images
-  } else if (rawLink.substr(0, 32) == 'https://external-preview.redd.it') {
-    newLink = postNode.querySelector(externalLinkDom).getAttribute('href')
+//   //get source link for external images
+//   } else if (rawLink.substr(0, 32) == 'https://external-preview.redd.it') {
+//     newLink = postNode.querySelector(externalLinkDom).getAttribute('href')
   
-  //push remaining good links through
-  } else if (rawLink.substr(0, 17) == 'https://i.redd.it') {
-    newLink = rawLink
-  }
+//   //push remaining good links through
+//   } else if (rawLink.substr(0, 17) == 'https://i.redd.it') {
+//     newLink = rawLink
+//   }
 
-  //return the output
-  return newLink
-}
+//   //return the output
+//   return newLink
+// }
+
+
+
+
+//---------------------------------------------------------------
+//                   unused code                   --
+//---------------------------------------------------------------
+
+//***
+// if (document.readyState === 'loading') {  // If document is still loading, add the event listener
+//   document.addEventListener('DOMContentLoaded', function() {
+//       console.log("Inside DOMContentLoaded listener");
+//       setTimeout(() => {addButtonToPosts(homepagePostContainerNode.childNodes)}, 1000);
+//   });
+// } else {  // Otherwise, directly execute your code
+//   console.log("Directly invoking the code as the document is already parsed");
+//   setTimeout(() => {addButtonToPosts(homepagePostContainerNode.childNodes)}, 1000);
+// }

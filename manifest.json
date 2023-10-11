@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Reddit Image Opener",
-  "version": "1.7",
+  "version": "2.0",
   "description": "Open images on Reddit directly from post previews",
 
   "permissions": [
