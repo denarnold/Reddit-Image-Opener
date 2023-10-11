@@ -26,58 +26,69 @@ const openImageButton = parser.parseFromString(buttonScript, 'text/html').body.f
 
 
 //---------------------------------------------------------------
-//                   Check Posts on Time Interval              --
+//                    addButtonToPosts Function                --
 //---------------------------------------------------------------
 
-// Takes a node list and filters to only contain image posts
+function addButtonToPosts(imagePosts) {
+  // Check each image post for openImageButton and add if not present
+  for (let post of imagePosts) {
+    if (!post.shadowRoot.querySelector('button[data-action="open-image"]')) {
+      
+      // Identify the buttonBarNode of the post
+      let buttonBarNode = post.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
+      
+      // Add the button
+      buttonBarNode.appendChild(openImageButton.cloneNode(true))
+    }
+  }
+}
+
+
+
+
+//---------------------------------------------------------------
+//                 Functions to List Image Posts               --
+//---------------------------------------------------------------
+
+// Takes a list of nodes and filters to image posts
 function filterImagePosts(container) {
-    return Array.from(container.children).filter(node =>
-        node.nodeName === 'SHREDDIT-POST' &&
-        (node.getAttribute('post-type') === 'image' || 
-         node.getAttribute('post-type') === 'gallery')
-    )
+  return Array.from(container.children).filter(node =>
+      node.nodeName === 'SHREDDIT-POST' &&
+      (node.getAttribute('post-type') === 'image' || 
+        node.getAttribute('post-type') === 'gallery')
+  )
 }
 
-function addButtonToPosts() {
+function listImagePosts() {
+  // Define the main post container node (contains initial posts and batches of new posts)
+  const postContainerNode = document.querySelector('report-flow-provider')
 
-    ////////////////////////  Assemble List of All Posts  ////////////////////////
-    
-    // Define the main post container node (contains initial posts and batches of new posts)
-    const postContainerNode = document.querySelector('report-flow-provider')
+  // Collect posts directly under report-flow-provider
+  let imagePosts = filterImagePosts(postContainerNode)
 
-    // Collect posts directly under report-flow-provider
-    let allPosts = filterImagePosts(postContainerNode)
+  // Collect posts under any faceplate-batch children of report-flow-provider
+  const faceplateBatches = postContainerNode.querySelectorAll('faceplate-batch')
+  for (let batch of faceplateBatches) {
+      imagePosts = imagePosts.concat(filterImagePosts(batch))
+  }
 
-    // Collect posts under any faceplate-batch children of report-flow-provider
-    const faceplateBatches = postContainerNode.querySelectorAll('faceplate-batch')
-    for (let batch of faceplateBatches) {
-        allPosts = allPosts.concat(filterImagePosts(batch))
-    }
+  // Collect posts under any shreddit-feed children of report-flow-provider
+  const shredditFeeds = postContainerNode.querySelectorAll('shreddit-feed')
+  for (let feed of shredditFeeds) {
+      imagePosts = imagePosts.concat(filterImagePosts(feed))
+  }
 
-    // Collect posts under any shreddit-feed children of report-flow-provider
-    const shredditFeeds = postContainerNode.querySelectorAll('shreddit-feed')
-    for (let feed of shredditFeeds) {
-        allPosts = allPosts.concat(filterImagePosts(feed))
-    }
-
-
-    ////////////////////////  Add Buttons  ////////////////////////
-
-    // Check each image post for openImageButton and add if not present
-    for (let post of allPosts) {
-      if (!post.shadowRoot.querySelector('button[data-action="open-image"]')) {
-        
-        // Identify the buttonBarNode of the post
-        let buttonBarNode = post.shadowRoot.querySelector('.flex.flex-row.items-center.flex-nowrap.overflow-hidden.justify-start')
-        
-        // Add the button
-        buttonBarNode.appendChild(openImageButton.cloneNode(true))
-      }
-    }
+  return imagePosts
 }
 
-// Run the assemblePostList function every 2 seconds
-setInterval(addButtonToPosts, 2000)
+
+
+
+//---------------------------------------------------------------
+//                 Check Posts on Time Interval                --
+//---------------------------------------------------------------
+
+setInterval(() => {addButtonToPosts(listImagePosts())}, 2000)
 
 
 
