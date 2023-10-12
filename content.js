@@ -128,37 +128,68 @@ document.addEventListener('click', function(event) {
 //                   findSourceLink Function                   --
 //---------------------------------------------------------------
 
-// function findSourceLink(postNode) {
-//   //identify the image node
-//   if (postNode.querySelector(multiImageDom)) {
-//     //for multi-image posts, find the container that is currently displayed
-//     //  will show left:0px when initially loaded, then left: 0px after switching between images
-//     displayedImageContainer = postNode.querySelector('[style="left:0px"], [style="left: 0px"]')
-
-//     console.log(postNode)
-//     //console.log(displayedImageContainer)
-//     //navigate to the image node within the container
-//     imageNode = displayedImageContainer.querySelector(multiImageDom)
-//   } else {
-//     //handle single-image posts
-//     imageNode = postNode.querySelector(singleImageDom)
-//   }
+const singleImageNode = 'absolute top-1/2 -translate-y-1/2 left-0 w-full opacity-30 object-cover scale-[1.2] post-background-image-filter'
+const multiImageNode = 'relative flex justify-center mt-0 bg-black/20'
   
-//   let rawLink = imageNode.src
 
-//   //get source link for reddit images
-//   if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
-//     newLink = 'https://i.redd.it' + rawLink.substr(23, rawLink.indexOf('?')-23)
-  
-//   //get source link for external images
-//   } else if (rawLink.substr(0, 32) == 'https://external-preview.redd.it') {
-//     newLink = postNode.querySelector(externalLinkDom).getAttribute('href')
-  
-//   //push remaining good links through
-//   } else if (rawLink.substr(0, 17) == 'https://i.redd.it') {
-//     newLink = rawLink
-//   }
 
-//   //return the output
-//   return newLink
-// }
+
+function findSourceLink(postNode) {
+
+  let imageNode
+
+  //identify the image node
+  if (postNode.getAttribute('post-type') === 'gallery') {
+
+    // Identify the image index that is currently being displayed (taken from indicator dots at bottom of gallery)
+    const indexContainer = postNode.querySelector('gallery-carousel')
+                          .shadowRoot.querySelector('faceplate-carousel')
+                          .shadowRoot.querySelector('faceplate-pagination-indicator')
+
+    let index = indexContainer.getAttribute('page-index')
+    index = parseInt(index, 10)  // Convert from string to int
+
+    // Assemble query string and navigate to the image container for that image index +1 
+    const imageContainerName = `li[slot="page-${index + 1}"]`
+    const imageContainer = postNode.querySelector(imageContainerName)
+
+    // The image node is the first child element in the container
+    imageNode = imageContainer.firstElementChild
+
+  } else {
+
+    // Handle single-image posts
+    imageNode = postNode.querySelector('img[alt][role="presentation"]')
+  
+  }
+  
+  let rawLink = imageNode.src
+  let newLink
+
+  //get source link for reddit images
+  if (rawLink.substr(0, 23) == 'https://preview.redd.it') {
+
+    // Extract the image filename from the path
+    const imagePath = rawLink.substring(rawLink.lastIndexOf('/'), rawLink.indexOf('?'))
+
+    // Extract the last parameter for the security hash
+    const lastParamMatch = rawLink.match(/&s=[^&]*/)
+    const lastParamStr = lastParamMatch ? lastParamMatch[0].replace('&', '?') : ''
+
+    // Construct the new link
+    newLink = 'https://i.redd.it' + imagePath + lastParamStr
+  
+  //get source link for external images (haven't seen these in new reddit layout)
+  } else if (rawLink.substr(0, 32) == 'https://external-preview.redd.it') {
+    newLink = postNode.querySelector(externalLinkDom).getAttribute('href')
+  
+  //push remaining good links through (haven't seen these in new reddit layout)
+  } else if (rawLink.substr(0, 17) == 'https://i.redd.it') {
+    newLink = rawLink
+  }
+
+  //return the output
+  console.log("raw link: ", rawLink)
+  console.log("new link: ", newLink)
+  return newLink
+}
