@@ -2,32 +2,18 @@
   "manifest_version": 3,
   "name": "Reddit Image Opener",
   "version": "2.0",
-  "description": "Open images on Reddit directly from post previews",
+  "description": "Disables Reddit's image view page, allowing image files to be viewed directly",
 
   "permissions": [
-    "storage",
-    "declarativeNetRequest",
-    "tabs"
+    "declarativeNetRequest"
   ],
 
   "host_permissions": [
-    "*://i.redd.it/*",
-    "*://preview.redd.it/*",
-    "*://external-preview.redd.it/*"
+    "*://*.redd.it/*"
   ],
   
   "background": {
     "service_worker": "background.js"
-  },
-  
-  "content_scripts": [{
-    "matches": ["https://*.reddit.com/*"],
-    "js": ["content.js"]
-  }],
-
-  "action": {
-    "default_icon": "img/icon.png",
-    "default_popup": "popup.html"
   },
 
   "icons": {
